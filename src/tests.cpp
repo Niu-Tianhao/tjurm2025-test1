@@ -7,6 +7,10 @@ int my_strlen(char *str) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+    int len = 0;
+    while (str[len] != '\0')
+        len++;
+    return len;
     return 0;
 }
 
@@ -19,6 +23,15 @@ void my_strcat(char *str_1, char *str_2) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+    while (*str_1 != '\0') 
+        str_1++;  
+    while (*str_2 != '\0') 
+    {
+        *str_1 = *str_2;  
+        str_1++;           
+        str_2++;           
+    }
+    *str_1 = '\0';
 }
 
 
@@ -31,6 +44,24 @@ char* my_strstr(char *s, char *p) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+    if (*p == '\0')
+        return s;
+    while (*s != '\0')
+    {
+        if (*s == *p)
+        {
+            char *s1 = s;
+            char *p1 = p;
+            while (*s1 != '\0' && *p1 != '\0' && *s1 == *p1)
+            {
+                s1++;
+                p1++;
+            }
+            if (*p1 == '\0')
+                return s;
+        }
+        s++;
+    }
     return 0;
 }
 
@@ -97,6 +128,18 @@ void rgb2gray(float *in, float *out, int h, int w) {
 
     // IMPLEMENT YOUR CODE HERE
     // ...
+    for (int i = 0; i < h; i++)
+    {
+        for (int j = 0; j < w; j++)
+        {
+            int index = (i * w + j) * 3;
+            float R = in[index];
+            float G = in[index + 1];
+            float B = in[index + 2];
+            float V = 0.1140 * B  + 0.5870 * G + 0.2989 * R;
+            out[i * w + j] = V;
+        }
+    }
 }
 
 // 练习5，实现图像处理算法 resize：缩小或放大图像
@@ -198,7 +241,34 @@ void resize(float *in, float *out, int h, int w, int c, float scale) {
 
     int new_h = h * scale, new_w = w * scale;
     // IMPLEMENT YOUR CODE HERE
+    for (int y = 0; y < new_h; y++) 
+    {
+        for (int x = 0; x < new_w; x++) 
+        {
+            float x0 = x / scale;
+            float y0 = y / scale;
+            int x1 = (int)x0;  
+            int y1 = (int)y0;   
+            int x2 = x1 + 1;    
+            int y2 = y1 + 1;     
 
+            float dx = x0 - x1; 
+            float dy = y0 - y1; 
+            if (x2 >= w)
+                 x2 = w - 1;
+            if (y2 >= h) 
+                y2 = h - 1;
+            for (int i = 0; i < c; i++)
+            {
+                float P1 = in[(y1 * w + x1) * c + i]; 
+                float P2 = in[(y1 * w + x2) * c + i]; 
+                float P3 = in[(y2 * w + x1) * c + i]; 
+                float P4 = in[(y2 * w + x2) * c + i]; 
+                float Q = P1 * (1 - dx) * (1 - dy) + P2 * dx * (1 - dy) + P3 * (1 - dx) * dy + P4 * dx * dy;
+                out[(y * new_w + x) * c + i] = Q;
+            }
+        }
+    }
 }
 
 
@@ -221,4 +291,23 @@ void hist_eq(float *in, int h, int w) {
      */
 
     // IMPLEMENT YOUR CODE HERE
+    int hist[256] = {0};  
+    int total = h * w;
+    for (int i = 0; i < total; i++) 
+    {
+        int pixel = (int)in[i];  
+        hist[pixel]++; 
+    }
+    int cdf[256] = {0};
+    cdf[0] = hist[0];  
+    for (int i = 1; i < 256; i++) 
+        cdf[i] = cdf[i - 1] + hist[i];
+    int min_cdf = cdf[0];
+    for (int i = 0; i < 256; ++i) 
+        cdf[i] = (cdf[i] - min_cdf) * 255 / (total - min_cdf); 
+    for (int i = 0; i < total; ++i) 
+    {
+        int pixel = (int)in[i]; 
+        in[i] = (float)cdf[pixel];
+    }
 }
